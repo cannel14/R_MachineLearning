@@ -1,0 +1,132 @@
+---
+title: "TAT"
+output: word_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+## R Markdown
+
+This is an R Markdown document. Markdown is a simple formatting syntax for authoring HTML, PDF, and MS Word documents. For more details on using R Markdown see <http://rmarkdown.rstudio.com>.
+
+When you click the **Knit** button a document will be generated that includes both content as well as the output of any embedded R code chunks within the document. You can embed an R code chunk like this:
+
+```{r}
+library(dslabs)
+
+```
+load the dataset,assign the dataset to data1
+```{r}
+data("murders")
+data1 <- murders
+
+```
+# exploring the structure of the data 
+we note that our data is a dataframe which consist of 51 observations and 5 variables(features),where chr stands for character type i.e, state and abb and the region is a factor hance it's a categorical data, population and total are numeric features
+```{r}
+str(data1)
+
+```
+##exploring numeric variables
+looking at our output we note that the minimum value of total is 2 while the mean is 184 ,which is sensitive to outliers and the maximum is 1257,we note that the max total is way above the mean hence this shows it to be an outlier,to prove this shall visualize using both the histogram and boxplot let's visualise the total feature
+we also note that the total histogram is also skewed towards the right and it has a heavy tail,to check on the measure of central tendancy and how spread our data is we shall perform the variance and statndard deviation
+we also note that we've outliers in our total feature as from 600
+```{r}
+
+summary(data1[c('population','total')])
+boxplot(data1$total, main="Boxplot of total",ylab="total")
+hist(data1$total, main = "Histogram of total",xlab = "total")
+```
+
+#visualizing numeric variables using histograms
+looking at the population histogram we note that normal distribuition feature is skewed towards the right with a heavy tail this shows the data to be more spread towards the  right
+```{r}
+boxplot(data1$population, main="Boxplot of population",ylab="population")
+hist(data1$population, main = "Histogram of population",xlab = "population")
+```
+we note why the the population feature is far more spread towards the right this is because of the high deviation in population of 6860669
+```{r}
+var(data1$population)
+sd(data1$population)
+var(data1$total)
+sd(data1$total)
+```
+#EXPLORING CATEGORICAL DATA
+we note that the mode of the state features is one throughout the column 
+we note that the southern region hasthe highest mode while the Northeast has the least mode.Northeast(9),South(17),North Central(12),West(13).
+```{r}
+str(data1)
+table(data1$state)
+
+table(data1$abb)
+table(data1$region)
+```
+#after visualizing a region feature we note that the south region has the highest bar count.
+```{r}
+library(ggplot2)
+ggplot(data1, aes(x=data1$region)) +
+  geom_bar()
+```
+#BIVARIATE ANALYSIS
+to obtain the correlation of  numerical variables between population and total 
+```{r}
+
+ggplot(data = data1)+ geom_point(aes(data1$population/10^6, data1$total)) +
+  geom_text(aes(data1$population/10^6, data1$total, label = data1$abb))
+```
+#heatmap
+```{r}
+
+library(reshape2)
+
+data2 <- cor(data1[sapply(data1,is.numeric)])
+
+data3 <- melt(data2)
+head(data3)
+
+ggplot(data3, aes(x = Var1,
+                  y = Var2,
+                  fill = value))+geom_tile()
+
+
+```
+#data exploration report
+Examining the data before fitting models by creating a scatter plot ,Scatter plots can help visualize any linear relationships between the dependent (response) variable and independent (predictor) variables.
+```{r}
+ggplot(data1, aes(data1$population/10^6, data1$total))+
+  geom_point()+
+  labs(title = "total deaths VS State Population",
+       x = "Population",
+       y = "total deaths")
+
+
+```
+# Examining the data by also finding the correlation coefficient
+Correlation is a statistical measure that suggests the level of linear dependence between two variables.Correlation can take values between -1 to +1. If we observe for every instance where speed increases,the distance also increases along with it, then there is a high positive correlation between them and therefore the correlation between them will be closer to 1. The opposite is true for an inverse relationship, in which case, the correlation between the variables will be close to -1.
+```{r}
+cor(data1$population/10^6, data1$total)
+```
+The linear model function lm, used below will create the relationship model between the predictor and the response variable. data1$total~data1$population/10^6 presenting the relation between x and y and mtcars the vector on which the formula will be applied.
+```{r}
+simple_lm <- lm(total~population, data1)
+simple_lm
+```
+```{r}
+anova(simple_lm)
+```
+Generating the anova table. This table will contain the sums of squares, degrees of freedom, F statistic, and p value
+```{r}
+pred1 <- predict(simple_lm, data1)
+pred1
+
+```
+Predicting the response variables
+```{r}
+
+library(DataExplorer)
+DataExplorer::create_report(data1)
+
+```
+
